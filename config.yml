@@ -1,0 +1,9 @@
+sshserver: *****.u-***.ac.jp
+sshuser: a00000000
+sshpassword: passwddd
+
+nntpserver: n.u-***.ac.jp:119
+
+line:
+  channelsecret: <Channel Secret>
+  channeltoken: <Channel Token>
