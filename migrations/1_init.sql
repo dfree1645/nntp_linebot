@@ -1,7 +1,9 @@
 -- +migrate Up
 CREATE TABLE `groups` (
   `group_id` int(11) NOT NULL AUTO_INCREMENT COMMENT 'ID',
-  `title` varchar(256) NOT NULL COMMENT 'グループ名',
+  `name` varchar(256) NOT NULL COMMENT 'グループ名',
+  `high` int(11) NOT NULL COMMENT '既知の最新',
+  `low` int(11) NOT NULL COMMENT '既知の最古',
   PRIMARY KEY (`group_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='グループ一覧';
 
@@ -9,7 +11,7 @@ CREATE TABLE `articles` (
   `article_id` int(11) NOT NULL AUTO_INCREMENT COMMENT 'ID',
   `article_strid` varchar(256) NOT NULL COMMENT 'サーバー生成ID',
   `send_date` datetime NOT NULL COMMENT '送信日時',
-  `title` varchar(256) NOT NULL COMMENT '件名',
+  `subject` varchar(256) NOT NULL COMMENT '件名',
   `body` text NOT NULL COMMENT '本文',
   PRIMARY KEY (`article_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='記事一覧';
