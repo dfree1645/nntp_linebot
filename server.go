@@ -3,14 +3,15 @@ package base
 import (
 	"io/ioutil"
 	"log"
-	//"net/http"
+	"net/http"
 
-	//"github.com/dfree1645/nntp_linebot/controller"
+	"github.com/dfree1645/nntp_linebot/controller"
 	"github.com/dfree1645/nntp_linebot/db"
 	//"github.com/dfree1645/nntp_linebot/nntp"
 	"github.com/gin-gonic/contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/gorm"
+	"github.com/line/line-bot-sdk-go/linebot"
 	csrf "github.com/utrack/gin-csrf"
 	"golang.org/x/crypto/ssh"
 	"gopkg.in/yaml.v1"
@@ -22,7 +23,7 @@ type Server struct {
 	sshServer  string
 	sshConfig  *ssh.ClientConfig
 	nntpServer string
-	lineConfig map[string]string
+	line       *linebot.Client
 	Engine     *gin.Engine
 }
 
@@ -56,8 +57,7 @@ func (s *Server) Init(conf, dbconf, env, path string) {
 		},
 	}))
 
-	log.Printf("\n%# v\n", s)
-	log.Printf("\n%s\n", s.lineConfig["channelsecret"])
+	log.Printf("\n%# v\n", s.line)
 	s.Route(path)
 }
 
@@ -101,12 +101,44 @@ func (s *Server) configFromFile(path string) error {
 	s.sshServer = conf.SSHserver
 	s.sshConfig = sshConfig
 	s.nntpServer = conf.NNTPserver
-	s.lineConfig = conf.Line
+	s.line, err = linebot.New(conf.Line["channelsecret"], conf.Line["channeltoken"])
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
 
 // Routeはベースアプリケーションのroutingを設定します
 func (s *Server) Route(path string) {
+	// ヘルスチェック用
+	s.Engine.GET("/ping", func(c *gin.Context) {
+		c.String(http.StatusOK, "%s", "pong")
+	})
+	s.Engine.GET("/token", func(c *gin.Context) {
+		c.JSON(http.StatusOK, map[string]string{
+			"token": csrf.GetToken(c),
+		})
+	})
 
+	application := &controller.Application{DB: s.dbx}
+	article := &controller.Article{DB: s.dbx}
+	cron := &controller.Cron{DB: s.dbx, SSHserver: s.sshServer, SSHconfig: s.sshConfig, NNTPserver: s.nntpServer, Line: s.line}
+	line := &controller.Line{DB: s.dbx, Line: s.line}
+
+	s.Engine.Static("/static", path+"/public")
+
+	//admin := s.Engine.Group("/admin")
+	//admin.Use(controller.AuthRequired())
+	{
+		//admin.GET("/", application.GetAdminPage)
+	}
+
+	app := s.Engine.Group("/")
+	{
+		app.GET("/", application.RootPage)
+		app.GET("/article/:id/:id2", article.ArticlePage)
+		app.GET("/cronJob", cron.Job)
+		app.POST("/linewebhock", line.Webhock)
+	}
 }
