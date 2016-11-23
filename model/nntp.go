@@ -1,9 +1,15 @@
 package model
 
 import (
+	"github.com/curious-eyes/jmail"
 	"github.com/dfree1645/nntp_linebot/nntp"
 	"github.com/jinzhu/gorm"
+	"net/mail"
 	"time"
+)
+
+const (
+	TIME_LAYOUT = "Mon, 02 Jan 2006 15:04:05 -0700 (MST)"
 )
 
 type Group struct {
@@ -39,7 +45,16 @@ func GetNewsGroups(db *gorm.DB) ([]Group, error) {
 
 func ConvToArticle(org *nntp.Article, group *Group) Article {
 	// TODO:文字コードの処理など
-	return Article{ID: 12345, IDstr: "234234@hogehoge", Group: group, SendDate: time.Now(), Subject: "件名", Body: "本文ほんぶんホンブン"}
+	// convert to net/mail.Message struct
+	message := mail.Message{Header: org.Header, Body: org.Body}
+	jmessage := jmail.Jmessage{&message}
+
+	body, _ := jmessage.DecBody()
+	header := jmessage.Header
+	t, _ := time.Parse(TIME_LAYOUT, header.Get("Nntp-Posting-Date"))
+	messageId := header.Get("Message-Id")
+
+	return Article{ID: 0, IDstr: messageId, Group: group, SendDate: t, Subject: jmessage.DecSubject(), Body: string(body)}
 }
 
 func GetUsers(db *gorm.DB, group *Group) ([]User, error) {
