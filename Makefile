@@ -2,7 +2,7 @@ DBNAME:=nntplinebot
 ENV:=development
 
 migrate/init:
-	mysql -u root -h localhost --protocol tcp -e "create database `$(DBNAME)`" -p
+	mysql -u root -h localhost --protocol tcp -e 'create database `$(DBNAME)`' -p
 
 migrate/up:
 	sql-migrate up -env=$(ENV)
