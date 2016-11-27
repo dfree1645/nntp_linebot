@@ -12,7 +12,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/gorm"
 	"github.com/line/line-bot-sdk-go/linebot"
-	"github.com/robfig/cron"
+	//"github.com/robfig/cron"
 	csrf "github.com/utrack/gin-csrf"
 	"golang.org/x/crypto/ssh"
 	"gopkg.in/yaml.v1"
@@ -26,7 +26,7 @@ type Server struct {
 	nntpServer string
 	line       *linebot.Client
 	Engine     *gin.Engine
-	cronObj    *cron.Cron
+	//cronObj    *cron.Cron
 }
 
 func (s *Server) Close() error {
@@ -49,7 +49,7 @@ func (s *Server) Init(conf, dbconf, env, path string) {
 		log.Fatalf("cannot open configuration. exit. %s", err)
 	}
 
-	s.cronObj = cron.New()
+	//s.cronObj = cron.New()
 
 	store := sessions.NewCookieStore([]byte("secret"))
 	s.Engine.Use(sessions.Sessions("session", store))
@@ -146,9 +146,11 @@ func (s *Server) Route(path string) {
 		app.POST("/linewebhock", line.Webhock)
 	}
 
-	s.cronObj.AddFunc("* */10 * * * *", func() {
-		log.Println("** cron **")
+
+	//s.cronObj.AddFunc("* */10 * * * *", func() {
+/*		log.Println("** cron **")
 		cron.CronJob()
 	})
 	s.cronObj.Start()
+	*/
 }
