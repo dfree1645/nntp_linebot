@@ -27,6 +27,13 @@ func (a *Cron) Job(c *gin.Context) {
 		c.JSON(500, err)
 	}
 
+	if len(groups) == 0 {
+		log.Println("CronJob : There is no news groups.")
+		c.String(http.StatusOK, "This is CronJob\n")
+		return
+	}
+	log.Printf("-- CronJob start. (%d groups)--\n", len(groups))
+
 	a.SSHconfig.Config.Ciphers = append(a.SSHconfig.Config.Ciphers, "aes128-cbc")
 
 	client, err := ssh.Dial("tcp", a.SSHserver, a.SSHconfig)
@@ -80,6 +87,8 @@ func (a *Cron) Job(c *gin.Context) {
 			}
 			newArticles = append(newArticles, model.ConvToArticle(article, &v))
 		}
+		log.Printf("[%s] %d new articles\n", v.Name, len(newArticles))
+
 		// このグループ購読中ユーザー一覧取得
 		users, err := model.GetUsers(a.DB, &v)
 		if err != nil {
@@ -99,6 +108,5 @@ func (a *Cron) Job(c *gin.Context) {
 		}
 
 	}
-
 	c.String(http.StatusOK, "This is CronJob\n")
 }
