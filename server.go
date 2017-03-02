@@ -143,12 +143,11 @@ func (s *Server) Route(path string) {
 		app.GET("/", application.RootPage)
 		app.GET("/article/:id/:id2", article.ArticlePage)
 		app.GET("/cronJob", cron.Job)
-		app.POST("/linewebhock", line.Webhock)
+		app.POST("/line/webhock", line.Webhook) //URL間違い /webhock -> /webhook
 	}
 
-
 	//s.cronObj.AddFunc("* */10 * * * *", func() {
-/*		log.Println("** cron **")
+	/*		log.Println("** cron **")
 		cron.CronJob()
 	})
 	s.cronObj.Start()

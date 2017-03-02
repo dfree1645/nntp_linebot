@@ -1,7 +1,7 @@
 package controller
 
 import (
-	"net/http"
+	"log"
 
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/gorm"
@@ -14,6 +14,36 @@ type Line struct {
 	Line *linebot.Client
 }
 
-func (a *Line) Webhock(c *gin.Context) {
-	c.String(http.StatusOK, "This is LineWebhock\n")
+func (a *Line) Webhook(c *gin.Context) {
+	received, err := a.Line.ParseRequest(c.Request)
+	if err != nil {
+		if err == linebot.ErrInvalidSignature {
+			log.Println(err)
+		}
+		return
+	}
+
+	for _, event := range received {
+		log.Println(event.Type)
+		if event.Type == linebot.EventTypeFollow {
+			message := linebot.NewTextMessage("FollowEvent\nYour UserID: " + event.Source.UserID)
+			_, err := a.Line.ReplyMessage(event.ReplyToken, message).Do()
+			if err != nil {
+				log.Println(err)
+			}
+			log.Println("Follow userID:", event.Source.UserID)
+		} else if event.Type == linebot.EventTypeMessage {
+			message := linebot.NewTextMessage("MessageEvent\nYour UserID: " + event.Source.UserID)
+			_, err := a.Line.ReplyMessage(event.ReplyToken, message).Do()
+			if err != nil {
+				log.Println(err)
+			}
+		} else if event.Type == linebot.EventTypeJoin {
+			message := linebot.NewTextMessage("JoinEvent\nGroup UserID: " + event.Source.GroupID + "\nRoomID: " + event.Source.RoomID)
+			_, err := a.Line.ReplyMessage(event.ReplyToken, message).Do()
+			if err != nil {
+				log.Println(err)
+			}
+		}
+	}
 }
