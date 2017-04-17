@@ -101,6 +101,7 @@ func (s *Server) configFromFile(path string) error {
 			ssh.Password(conf.SSHpassword),
 		},
 	}
+	sshConfig.Config.Ciphers = append(sshConfig.Config.Ciphers, "aes128-cbc")
 
 	s.sshServer = conf.SSHserver
 	s.sshConfig = sshConfig
