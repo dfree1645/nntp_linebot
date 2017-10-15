@@ -7,7 +7,7 @@ import (
 
 	"github.com/jinzhu/gorm"
 
-	_ "github.com/go-sql-driver/mysql"
+	_ "github.com/mattn/go-sqlite3"
 	"gopkg.in/yaml.v1"
 )
 
@@ -30,7 +30,7 @@ func (c *Config) DSN() string {
 }
 
 func (c *Config) Open() (*gorm.DB, error) {
-	return gorm.Open("mysql", c.DSN())
+	return gorm.Open("sqlite3", c.DSN())
 }
 
 func NewConfigsFromFile(path string) (Configs, error) {

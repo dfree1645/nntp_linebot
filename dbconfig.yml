@@ -1,4 +1,4 @@
 development:
-  dialect: mysql
-  datasource: root:password@tcp(localhost:3306)/nntplinebot?parseTime=true&collation=utf8_general_ci&interpolateParams=true
+  dialect: sqlite3
+  datasource: nntp_linebot.db
   dir: migrations
