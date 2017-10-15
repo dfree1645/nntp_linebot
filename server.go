@@ -3,12 +3,13 @@ package base
 import (
 	"io/ioutil"
 	"log"
+	"net"
 	"net/http"
 
 	"github.com/dfree1645/nntp_linebot/controller"
 	"github.com/dfree1645/nntp_linebot/db"
 	//"github.com/dfree1645/nntp_linebot/nntp"
-	"github.com/gin-gonic/contrib/sessions"
+	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/gorm"
 	"github.com/line/line-bot-sdk-go/linebot"
@@ -81,6 +82,7 @@ func (s *Server) configFromFile(path string) error {
 		SSHserver   string            `yaml:"sshserver"`
 		SSHuser     string            `yaml:"sshuser"`
 		SSHpassword string            `yaml:"sshpassword"`
+		SSHciphers  []string          `yaml:"sshciphers"`
 		NNTPserver  string            `yaml:"nntpserver"`
 		Line        map[string]string `yaml:"line"`
 	}
@@ -98,9 +100,18 @@ func (s *Server) configFromFile(path string) error {
 	sshConfig := &ssh.ClientConfig{
 		User: conf.SSHuser,
 		Auth: []ssh.AuthMethod{
+			ssh.KeyboardInteractive(func(user, instruction string, questions []string, echos []bool) (answers []string, err error) {
+				answers = []string{conf.SSHpassword}
+				return
+			}),
 			ssh.Password(conf.SSHpassword),
 		},
+		HostKeyCallback: func(hostname string, remote net.Addr, key ssh.PublicKey) error {
+			return nil
+		},
 	}
+	sshConfig.Ciphers = conf.SSHciphers
+	log.Printf("%#v\n", sshConfig.Ciphers)
 
 	s.sshServer = conf.SSHserver
 	s.sshConfig = sshConfig

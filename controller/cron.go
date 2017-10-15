@@ -34,8 +34,6 @@ func (a *Cron) Job(c *gin.Context) {
 	}
 	log.Printf("-- CronJob start. (%d groups)--\n", len(groups))
 
-	a.SSHconfig.Config.Ciphers = append(a.SSHconfig.Config.Ciphers, "aes128-cbc")
-
 	client, err := ssh.Dial("tcp", a.SSHserver, a.SSHconfig)
 	if err != nil {
 		log.Println("error : " + err.Error())

@@ -6,6 +6,8 @@
 sshserver: *****.***.ac.jp
 sshuser: abc000000
 sshpassword: passwddd
+sshciphers:
+  aes128-cbc
 
 nntpserver: **.****.ac.jp:119
 
