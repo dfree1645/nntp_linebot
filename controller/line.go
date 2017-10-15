@@ -24,7 +24,8 @@ func (a *Line) Webhook(c *gin.Context) {
 	}
 
 	for _, event := range received {
-		log.Println(event.Type)
+		log.Println()
+		log.Printf("message received\n UserID: %s\n type: %s\n\n", event.Source.UserID, event.Type)
 		if event.Type == linebot.EventTypeFollow {
 			message := linebot.NewTextMessage("FollowEvent\nYour UserID: " + event.Source.UserID)
 			_, err := a.Line.ReplyMessage(event.ReplyToken, message).Do()

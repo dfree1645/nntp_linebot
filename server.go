@@ -154,7 +154,7 @@ func (s *Server) Route(path string) {
 		app.GET("/", application.RootPage)
 		app.GET("/article/:id/:id2", article.ArticlePage)
 		app.GET("/cronJob", cron.Job)
-		app.POST("/line/webhock", line.Webhook) //URL間違い /webhock -> /webhook
+		app.POST("/line/webhook", line.Webhook)
 	}
 
 	//s.cronObj.AddFunc("* */10 * * * *", func() {
