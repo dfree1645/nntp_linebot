@@ -76,6 +76,5 @@ func UpdateGroup(db *gorm.DB, group *Group, high, low int) error {
 }
 
 func InsertArticles(db *gorm.DB, articles []Article) error {
-	// TODO:実装
-	return nil
+	return db.Table("articles").Create(&articles).Error
 }
