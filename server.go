@@ -8,12 +8,10 @@ import (
 
 	"github.com/dfree1645/nntp_linebot/controller"
 	"github.com/dfree1645/nntp_linebot/db"
-	//"github.com/dfree1645/nntp_linebot/nntp"
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/gorm"
 	"github.com/line/line-bot-sdk-go/linebot"
 	"github.com/robfig/cron"
-	csrf "github.com/utrack/gin-csrf"
 	"golang.org/x/crypto/ssh"
 	"gopkg.in/yaml.v1"
 )
@@ -48,16 +46,16 @@ func (s *Server) Init(conf, dbconf, env, path string) {
 		log.Fatalf("cannot open configuration. exit. %s", err)
 	}
 
-	//s.cronObj = cron.New()
+	// 設定
+	log.Printf("SSH Server: %s\n", s.sshServer)
+	log.Printf("NNTP Server: %s\n", s.nntpServer)
 
-	log.Printf("\n%# v\n", s.line)
 	s.Route(path)
 }
 
 // Newはベースアプリケーションを初期化します
 func New(path string) *Server {
 	r := gin.Default()
-	//r.LoadHTMLGlob(path + "templates/*")
 	return &Server{Engine: r}
 }
 
@@ -79,7 +77,6 @@ func (s *Server) configFromFile(path string) error {
 	if err != nil {
 		return err
 	}
-	//log.Printf("\n%s\n", b)
 	var conf Data
 	if err = yaml.Unmarshal(buf, &conf); err != nil {
 		return err
@@ -99,7 +96,6 @@ func (s *Server) configFromFile(path string) error {
 		},
 	}
 	sshConfig.Ciphers = conf.SSHciphers
-	log.Printf("%#v\n", sshConfig.Ciphers)
 
 	s.sshServer = conf.SSHserver
 	s.sshConfig = sshConfig
@@ -118,11 +114,6 @@ func (s *Server) Route(path string) {
 	s.Engine.GET("/ping", func(c *gin.Context) {
 		c.String(http.StatusOK, "%s", "pong")
 	})
-	s.Engine.GET("/token", func(c *gin.Context) {
-		c.JSON(http.StatusOK, map[string]string{
-			"token": csrf.GetToken(c),
-		})
-	})
 
 	application := &controller.Application{DB: s.dbx}
 	article := &controller.Article{DB: s.dbx}
@@ -130,12 +121,6 @@ func (s *Server) Route(path string) {
 	line := &controller.Line{DB: s.dbx, Line: s.line}
 
 	s.Engine.Static("/static", path+"/public")
-
-	//admin := s.Engine.Group("/admin")
-	//admin.Use(controller.AuthRequired())
-	{
-		//admin.GET("/", application.GetAdminPage)
-	}
 
 	app := s.Engine.Group("/")
 	{
