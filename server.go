@@ -9,7 +9,6 @@ import (
 	"github.com/dfree1645/nntp_linebot/controller"
 	"github.com/dfree1645/nntp_linebot/db"
 	//"github.com/dfree1645/nntp_linebot/nntp"
-	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/gorm"
 	"github.com/line/line-bot-sdk-go/linebot"
@@ -51,16 +50,6 @@ func (s *Server) Init(conf, dbconf, env, path string) {
 	}
 
 	//s.cronObj = cron.New()
-
-	store := sessions.NewCookieStore([]byte("secret"))
-	s.Engine.Use(sessions.Sessions("session", store))
-	s.Engine.Use(csrf.Middleware(csrf.Options{
-		Secret: "secret",
-		ErrorFunc: func(c *gin.Context) {
-			c.JSON(400, gin.H{"error": "CSRF token mismach"})
-			c.Abort()
-		},
-	}))
 
 	log.Printf("\n%# v\n", s.line)
 	s.Route(path)
