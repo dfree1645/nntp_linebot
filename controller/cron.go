@@ -22,39 +22,45 @@ type Cron struct {
 }
 
 func (a *Cron) Job(c *gin.Context) {
+	err := a.CronJob()
+	if err != nil {
+		c.String(500, err.Error())
+	}
+	c.String(http.StatusOK, "This is CronJob\n")
+}
+
+func (a *Cron) CronJob() error {
+	log.Println("-- CronJob start. --")
+	defer log.Println("-- CronJob finish. --")
+
 	groups, err := model.GetNewsGroups(a.DB)
 	if err != nil {
-		c.JSON(500, err)
+		log.Printf("error: %s\n", err.Error())
+		return err
 	}
-
+	log.Printf("groups: %s\n", len(groups))
 	if len(groups) == 0 {
-		log.Println("CronJob : There is no news groups.")
-		c.String(http.StatusOK, "This is CronJob\n")
-		return
+		return nil
 	}
-	log.Printf("-- CronJob start. (%d groups)--\n", len(groups))
 
 	client, err := ssh.Dial("tcp", a.SSHserver, a.SSHconfig)
 	if err != nil {
-		log.Println("error : " + err.Error())
-		c.String(500, "ssh error.")
-		return
+		log.Println("error SSH: " + err.Error())
+		return err
 	}
 	defer client.Close()
 
 	nsC, err := client.Dial("tcp", a.NNTPserver)
 	if err != nil {
-		log.Println("error : " + err.Error())
-		c.String(500, "nntp error.")
-		return
+		log.Println("error NNTPconn: " + err.Error())
+		return err
 	}
 	defer nsC.Close()
 
 	nsNntp, err := nntp.New(nsC)
 	if err != nil {
-		log.Println("error : " + err.Error())
-		c.String(500, "nntp session error.")
-		return
+		log.Println("error NNTPsess: " + err.Error())
+		return err
 	}
 
 	for _, v := range groups {
@@ -78,9 +84,9 @@ func (a *Cron) Job(c *gin.Context) {
 		}
 		newArticles := []model.Article{}
 		for i := newHigh; i >= newLow; i-- {
-			article, er := nsNntp.Article(strconv.FormatInt(i, 10))
+			article, err := nsNntp.Article(strconv.FormatInt(i, 10))
 			if err != nil {
-				log.Printf("[%s] Could not fetch article (id=%d) : %v\n", v.Name, i, er)
+				log.Printf("[%s] Could not fetch article (id=%d) : %v\n", v.Name, i, err)
 				continue
 			}
 			newArticles = append(newArticles, model.ConvToArticle(article, &v))
@@ -106,5 +112,5 @@ func (a *Cron) Job(c *gin.Context) {
 		}
 
 	}
-	c.String(http.StatusOK, "This is CronJob\n")
+	return nil
 }

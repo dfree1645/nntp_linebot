@@ -12,7 +12,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/gorm"
 	"github.com/line/line-bot-sdk-go/linebot"
-	//"github.com/robfig/cron"
+	"github.com/robfig/cron"
 	csrf "github.com/utrack/gin-csrf"
 	"golang.org/x/crypto/ssh"
 	"gopkg.in/yaml.v1"
@@ -26,7 +26,6 @@ type Server struct {
 	nntpServer string
 	line       *linebot.Client
 	Engine     *gin.Engine
-	//cronObj    *cron.Cron
 }
 
 func (s *Server) Close() error {
@@ -127,7 +126,7 @@ func (s *Server) Route(path string) {
 
 	application := &controller.Application{DB: s.dbx}
 	article := &controller.Article{DB: s.dbx}
-	cron := &controller.Cron{DB: s.dbx, SSHserver: s.sshServer, SSHconfig: s.sshConfig, NNTPserver: s.nntpServer, Line: s.line}
+	croncon := &controller.Cron{DB: s.dbx, SSHserver: s.sshServer, SSHconfig: s.sshConfig, NNTPserver: s.nntpServer, Line: s.line}
 	line := &controller.Line{DB: s.dbx, Line: s.line}
 
 	s.Engine.Static("/static", path+"/public")
@@ -142,14 +141,13 @@ func (s *Server) Route(path string) {
 	{
 		app.GET("/", application.RootPage)
 		app.GET("/article/:id/:id2", article.ArticlePage)
-		app.GET("/cronJob", cron.Job)
+		app.GET("/cronJob", croncon.Job)
 		app.POST("/line/webhook", line.Webhook)
 	}
 
-	//s.cronObj.AddFunc("* */10 * * * *", func() {
-	/*		log.Println("** cron **")
-		cron.CronJob()
+	c := cron.New()
+	c.AddFunc("0 */10 * * * *", func() {
+		croncon.CronJob()
 	})
-	s.cronObj.Start()
-	*/
+	c.Start()
 }
